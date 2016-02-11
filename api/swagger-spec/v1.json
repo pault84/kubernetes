@@ -14918,6 +14918,10 @@
       "$ref": "v1.AzureFileVolumeSource",
       "description": "AzureFile represents an Azure File Service mount on the host and bind mount to the pod."
      },
+     "pwx": {
+      "$ref": "v1.PwxVolumeSource",
+      "description": "Pwx represents a Pwx persistent volume to mount to the pod."
+     },
      "accessModes": {
       "type": "array",
       "items": {
@@ -14939,8 +14943,7 @@
     "id": "v1.GCEPersistentDiskVolumeSource",
     "description": "Represents a Persistent Disk resource in Google Compute Engine.\n\nA GCE PD must exist and be formatted before mounting to a container. The disk must also be in the same GCE project and zone as the kubelet. A GCE PD can only be mounted as read/write once. GCE PDs support ownership management and SELinux relabeling.",
     "required": [
-     "pdName",
-     "fsType"
+     "pdName"
     ],
     "properties": {
      "pdName": {
@@ -14949,7 +14952,7 @@
      },
      "fsType": {
       "type": "string",
-      "description": "Filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: \"ext4\", \"xfs\", \"ntfs\". More info: http://releases.k8s.io/HEAD/docs/user-guide/volumes.md#gcepersistentdisk"
+      "description": "Filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: \"ext4\", \"xfs\", \"ntfs\". Implicitly inferred to be \"ext4\" if unspecified. More info: http://releases.k8s.io/HEAD/docs/user-guide/volumes.md#gcepersistentdisk"
      },
      "partition": {
       "type": "integer",
@@ -14966,8 +14969,7 @@
     "id": "v1.AWSElasticBlockStoreVolumeSource",
     "description": "Represents a Persistent Disk resource in AWS.\n\nAn AWS EBS disk must exist and be formatted before mounting to a container. The disk must also be in the same AWS zone as the kubelet. An AWS EBS disk can only be mounted as read/write once. AWS EBS volumes support ownership management and SELinux relabeling.",
     "required": [
-     "volumeID",
-     "fsType"
+     "volumeID"
     ],
     "properties": {
      "volumeID": {
@@ -14976,7 +14978,7 @@
      },
      "fsType": {
       "type": "string",
-      "description": "Filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: \"ext4\", \"xfs\", \"ntfs\". More info: http://releases.k8s.io/HEAD/docs/user-guide/volumes.md#awselasticblockstore"
+      "description": "Filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: \"ext4\", \"xfs\", \"ntfs\". Implicitly inferred to be \"ext4\" if unspecified. More info: http://releases.k8s.io/HEAD/docs/user-guide/volumes.md#awselasticblockstore"
      },
      "partition": {
       "type": "integer",
@@ -15071,7 +15073,7 @@
      },
      "fsType": {
       "type": "string",
-      "description": "Filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: \"ext4\", \"xfs\", \"ntfs\". More info: http://releases.k8s.io/HEAD/docs/user-guide/volumes.md#rbd"
+      "description": "Filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: \"ext4\", \"xfs\", \"ntfs\". Implicitly inferred to be \"ext4\" if unspecified. More info: http://releases.k8s.io/HEAD/docs/user-guide/volumes.md#rbd"
      },
      "pool": {
       "type": "string",
@@ -15111,8 +15113,7 @@
     "required": [
      "targetPortal",
      "iqn",
-     "lun",
-     "fsType"
+     "lun"
     ],
     "properties": {
      "targetPortal": {
@@ -15134,7 +15135,7 @@
      },
      "fsType": {
       "type": "string",
-      "description": "Filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: \"ext4\", \"xfs\", \"ntfs\". More info: http://releases.k8s.io/HEAD/docs/user-guide/volumes.md#iscsi"
+      "description": "Filesystem type of the volume that you want to mount. Tip: Ensure that the filesystem type is supported by the host operating system. Examples: \"ext4\", \"xfs\", \"ntfs\". Implicitly inferred to be \"ext4\" if unspecified. More info: http://releases.k8s.io/HEAD/docs/user-guide/volumes.md#iscsi"
      },
      "readOnly": {
       "type": "boolean",
@@ -15155,7 +15156,7 @@
      },
      "fsType": {
       "type": "string",
-      "description": "Required: Filesystem type to mount. Must be a filesystem type supported by the host operating system. Only ext3 and ext4 are allowed More info: http://releases.k8s.io/HEAD/examples/mysql-cinder-pd/README.md"
+      "description": "Filesystem type to mount. Must be a filesystem type supported by the host operating system. Examples: \"ext4\", \"xfs\", \"ntfs\". Implicitly inferred to be \"ext4\" if unspecified. More info: http://releases.k8s.io/HEAD/examples/mysql-cinder-pd/README.md"
      },
      "readOnly": {
       "type": "boolean",
@@ -15204,8 +15205,7 @@
     "description": "Represents a Fibre Channel volume. Fibre Channel volumes can only be mounted as read/write once. Fibre Channel volumes support ownership management and SELinux relabeling.",
     "required": [
      "targetWWNs",
-     "lun",
-     "fsType"
+     "lun"
     ],
     "properties": {
      "targetWWNs": {
@@ -15222,7 +15222,7 @@
      },
      "fsType": {
       "type": "string",
-      "description": "Required: Filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. \"ext4\", \"xfs\", \"ntfs\""
+      "description": "Filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. \"ext4\", \"xfs\", \"ntfs\". Implicitly inferred to be \"ext4\" if unspecified."
      },
      "readOnly": {
       "type": "boolean",
@@ -15256,7 +15256,7 @@
      },
      "fsType": {
       "type": "string",
-      "description": "Required: Filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. \"ext4\", \"xfs\", \"ntfs\""
+      "description": "Filesystem type to mount. Must be a filesystem type supported by the host operating system. Ex. \"ext4\", \"xfs\", \"ntfs\". The default filesystem depends on FlexVolume script."
      },
      "secretRef": {
       "$ref": "v1.LocalObjectReference",
@@ -15291,6 +15291,23 @@
      "readOnly": {
       "type": "boolean",
       "description": "Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts."
+     }
+    }
+   },
+   "v1.PwxVolumeSource": {
+    "id": "v1.PwxVolumeSource",
+    "required": [
+     "volumeID"
+    ],
+    "properties": {
+     "volumeID": {
+      "type": "string"
+     },
+     "fsType": {
+      "type": "string"
+     },
+     "readOnly": {
+      "type": "boolean"
      }
     }
    },
@@ -15516,6 +15533,10 @@
      "flocker": {
       "$ref": "v1.FlockerVolumeSource",
       "description": "Flocker represents a Flocker volume attached to a kubelet's host machine. This depends on the Flocker control service being running"
+     },
+     "pwx": {
+      "$ref": "v1.PwxVolumeSource",
+      "description": "Pwx represents a Pwx persistent volume to mount to the pod."
      },
      "downwardAPI": {
       "$ref": "v1.DownwardAPIVolumeSource",

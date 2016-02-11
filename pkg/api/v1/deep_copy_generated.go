@@ -1489,6 +1489,14 @@ func deepCopy_v1_PersistentVolumeSource(in PersistentVolumeSource, out *Persiste
 	} else {
 		out.Flocker = nil
 	}
+	if in.PwxDisk != nil {
+		out.PwxDisk = new(PwxVolumeSource)
+		if err := deepCopy_v1_PwxVolumeSource(*in.PwxDisk, out.PwxDisk, c); err != nil {
+			return err
+		}
+	} else {
+		out.PwxDisk = nil
+	}
 	if in.FlexVolume != nil {
 		out.FlexVolume = new(FlexVolumeSource)
 		if err := deepCopy_v1_FlexVolumeSource(*in.FlexVolume, out.FlexVolume, c); err != nil {
@@ -1888,6 +1896,13 @@ func deepCopy_v1_Probe(in Probe, out *Probe, c *conversion.Cloner) error {
 	out.PeriodSeconds = in.PeriodSeconds
 	out.SuccessThreshold = in.SuccessThreshold
 	out.FailureThreshold = in.FailureThreshold
+	return nil
+}
+
+func deepCopy_v1_PwxVolumeSource(in PwxVolumeSource, out *PwxVolumeSource, c *conversion.Cloner) error {
+	out.VolumeID = in.VolumeID
+	out.FSType = in.FSType
+	out.ReadOnly = in.ReadOnly
 	return nil
 }
 
@@ -2513,6 +2528,14 @@ func deepCopy_v1_VolumeSource(in VolumeSource, out *VolumeSource, c *conversion.
 	} else {
 		out.Flocker = nil
 	}
+	if in.PwxDisk != nil {
+		out.PwxDisk = new(PwxVolumeSource)
+		if err := deepCopy_v1_PwxVolumeSource(*in.PwxDisk, out.PwxDisk, c); err != nil {
+			return err
+		}
+	} else {
+		out.PwxDisk = nil
+	}
 	if in.DownwardAPI != nil {
 		out.DownwardAPI = new(DownwardAPIVolumeSource)
 		if err := deepCopy_v1_DownwardAPIVolumeSource(*in.DownwardAPI, out.DownwardAPI, c); err != nil {
@@ -2671,6 +2694,7 @@ func init() {
 		deepCopy_v1_PodTemplateList,
 		deepCopy_v1_PodTemplateSpec,
 		deepCopy_v1_Probe,
+		deepCopy_v1_PwxVolumeSource,
 		deepCopy_v1_RBDVolumeSource,
 		deepCopy_v1_RangeAllocation,
 		deepCopy_v1_ReplicationController,

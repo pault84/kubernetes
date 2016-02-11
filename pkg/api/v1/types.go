@@ -256,6 +256,9 @@ type VolumeSource struct {
 
 	// Flocker represents a Flocker volume attached to a kubelet's host machine. This depends on the Flocker control service being running
 	Flocker *FlockerVolumeSource `json:"flocker,omitempty"`
+	
+	// PwxDisk represents a Pwx volume attached to a kubelet's host machine. This depends on the Pwx service being running
+        PwxDisk *PwxVolumeSource `json:"pwx,omitempty"`	
 
 	// DownwardAPI represents downward API about the pod that should populate this volume
 	DownwardAPI *DownwardAPIVolumeSource `json:"downwardAPI,omitempty"`
@@ -317,6 +320,8 @@ type PersistentVolumeSource struct {
 	FC *FCVolumeSource `json:"fc,omitempty"`
 	// Flocker represents a Flocker volume attached to a kubelet's host machine and exposed to the pod for its usage. This depends on the Flocker control service being running
 	Flocker *FlockerVolumeSource `json:"flocker,omitempty"`
+	// PwxDisk represents a Pwx volume attached to a kubelet's host machine. This depends on the Pwx service being running
+        PwxDisk *PwxVolumeSource `json:"pwx,omitempty"`
 	// FlexVolume represents a generic volume resource that is
 	// provisioned/attached using a exec based plugin. This is an
 	// alpha feature and may change in future.
@@ -324,6 +329,8 @@ type PersistentVolumeSource struct {
 	// AzureFile represents an Azure File Service mount on the host and bind mount to the pod.
 	AzureFile *AzureFileVolumeSource `json:"azureFile,omitempty"`
 }
+
+// +genclient=true,nonNamespaced=true
 
 // PersistentVolume (PV) is a storage resource provisioned by an administrator.
 // It is analogous to a node.
@@ -542,7 +549,7 @@ type RBDVolumeSource struct {
 	RBDImage string `json:"image"`
 	// Filesystem type of the volume that you want to mount.
 	// Tip: Ensure that the filesystem type is supported by the host operating system.
-	// Examples: "ext4", "xfs", "ntfs".
+	// Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 	// More info: http://releases.k8s.io/HEAD/docs/user-guide/volumes.md#rbd
 	// TODO: how do we prevent errors in the filesystem from compromising the machine
 	FSType string `json:"fsType,omitempty"`
@@ -577,9 +584,9 @@ type CinderVolumeSource struct {
 	// volume id used to identify the volume in cinder
 	// More info: http://releases.k8s.io/HEAD/examples/mysql-cinder-pd/README.md
 	VolumeID string `json:"volumeID"`
-	// Required: Filesystem type to mount.
+	// Filesystem type to mount.
 	// Must be a filesystem type supported by the host operating system.
-	// Only ext3 and ext4 are allowed
+	// Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 	// More info: http://releases.k8s.io/HEAD/examples/mysql-cinder-pd/README.md
 	FSType string `json:"fsType,omitempty"`
 	// Optional: Defaults to false (read/write). ReadOnly here will force
@@ -618,6 +625,21 @@ type FlockerVolumeSource struct {
 	DatasetName string `json:"datasetName"`
 }
 
+// Represents a Pwx volume mounted by the Pwx agent.
+// Pwx volumes do not support ownership management or SELinux relabeling.
+type PwxVolumeSource struct {
+        // Unique id of the volume used to identify the pwx volume
+        VolumeID string `json:"volumeID"`
+        // Required: Filesystem type to mount.
+        // Must be a filesystem type supported by the host operating system.
+        // Ex. "ext4", "xfs", "ntfs"
+        // TODO: how do we prevent errors in the filesystem from compromising the machine
+        FSType string `json:"fsType,omitempty"`
+        // Optional: Defaults to false (read/write). ReadOnly here will force
+        // the ReadOnly setting in VolumeMounts.
+        ReadOnly bool `json:"readOnly,omitempty"`
+}
+
 // StorageMedium defines ways that storage can be allocated to a volume.
 type StorageMedium string
 
@@ -648,10 +670,10 @@ type GCEPersistentDiskVolumeSource struct {
 	PDName string `json:"pdName"`
 	// Filesystem type of the volume that you want to mount.
 	// Tip: Ensure that the filesystem type is supported by the host operating system.
-	// Examples: "ext4", "xfs", "ntfs".
+	// Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 	// More info: http://releases.k8s.io/HEAD/docs/user-guide/volumes.md#gcepersistentdisk
 	// TODO: how do we prevent errors in the filesystem from compromising the machine
-	FSType string `json:"fsType"`
+	FSType string `json:"fsType,omitempty"`
 	// The partition in the volume that you want to mount.
 	// If omitted, the default is to mount by volume name.
 	// Examples: For volume /dev/sda1, you specify the partition as "1".
@@ -669,9 +691,9 @@ type GCEPersistentDiskVolumeSource struct {
 type FlexVolumeSource struct {
 	// Driver is the name of the driver to use for this volume.
 	Driver string `json:"driver"`
-	// Required: Filesystem type to mount.
+	// Filesystem type to mount.
 	// Must be a filesystem type supported by the host operating system.
-	// Ex. "ext4", "xfs", "ntfs"
+	// Ex. "ext4", "xfs", "ntfs". The default filesystem depends on FlexVolume script.
 	FSType string `json:"fsType,omitempty"`
 	// Optional: SecretRef is reference to the authentication secret for User, default is empty.
 	SecretRef *LocalObjectReference `json:"secretRef,omitempty"`
@@ -694,10 +716,10 @@ type AWSElasticBlockStoreVolumeSource struct {
 	VolumeID string `json:"volumeID"`
 	// Filesystem type of the volume that you want to mount.
 	// Tip: Ensure that the filesystem type is supported by the host operating system.
-	// Examples: "ext4", "xfs", "ntfs".
+	// Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 	// More info: http://releases.k8s.io/HEAD/docs/user-guide/volumes.md#awselasticblockstore
 	// TODO: how do we prevent errors in the filesystem from compromising the machine
-	FSType string `json:"fsType"`
+	FSType string `json:"fsType,omitempty"`
 	// The partition in the volume that you want to mount.
 	// If omitted, the default is to mount by volume name.
 	// Examples: For volume /dev/sda1, you specify the partition as "1".
@@ -768,10 +790,10 @@ type ISCSIVolumeSource struct {
 	ISCSIInterface string `json:"iscsiInterface,omitempty"`
 	// Filesystem type of the volume that you want to mount.
 	// Tip: Ensure that the filesystem type is supported by the host operating system.
-	// Examples: "ext4", "xfs", "ntfs".
+	// Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 	// More info: http://releases.k8s.io/HEAD/docs/user-guide/volumes.md#iscsi
 	// TODO: how do we prevent errors in the filesystem from compromising the machine
-	FSType string `json:"fsType"`
+	FSType string `json:"fsType,omitempty"`
 	// ReadOnly here will force the ReadOnly setting in VolumeMounts.
 	// Defaults to false.
 	ReadOnly bool `json:"readOnly,omitempty"`
@@ -785,11 +807,11 @@ type FCVolumeSource struct {
 	TargetWWNs []string `json:"targetWWNs"`
 	// Required: FC target lun number
 	Lun *int32 `json:"lun"`
-	// Required: Filesystem type to mount.
+	// Filesystem type to mount.
 	// Must be a filesystem type supported by the host operating system.
-	// Ex. "ext4", "xfs", "ntfs"
+	// Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 	// TODO: how do we prevent errors in the filesystem from compromising the machine
-	FSType string `json:"fsType"`
+	FSType string `json:"fsType,omitempty"`
 	// Optional: Defaults to false (read/write). ReadOnly here will force
 	// the ReadOnly setting in VolumeMounts.
 	ReadOnly bool `json:"readOnly,omitempty"`
@@ -1539,6 +1561,8 @@ type PodStatusResult struct {
 	Status PodStatus `json:"status,omitempty"`
 }
 
+// +genclient=true
+
 // Pod is a collection of containers that can run on a host. This resource is created
 // by clients and scheduled onto hosts.
 type Pod struct {
@@ -1581,6 +1605,8 @@ type PodTemplateSpec struct {
 	// More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#spec-and-status
 	Spec PodSpec `json:"spec,omitempty"`
 }
+
+// +genclient=true
 
 // PodTemplate describes a template for creating copies of a predefined pod.
 type PodTemplate struct {
@@ -1641,6 +1667,8 @@ type ReplicationControllerStatus struct {
 	// ObservedGeneration reflects the generation of the most recently observed replication controller.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
+
+// +genclient=true
 
 // ReplicationController represents the configuration of a replication controller.
 type ReplicationController struct {
@@ -1819,6 +1847,8 @@ type ServicePort struct {
 	NodePort int32 `json:"nodePort,omitempty"`
 }
 
+// +genclient=true
+
 // Service is a named abstraction of software service (for example, mysql) consisting of local port
 // (for example 3306) that the proxy listens on, and the selector that determines which pods
 // will answer requests sent through the proxy.
@@ -1856,6 +1886,8 @@ type ServiceList struct {
 	Items []Service `json:"items"`
 }
 
+// +genclient=true
+
 // ServiceAccount binds together:
 // * a name, understood by users, and perhaps by peripheral systems, for an identity
 // * a principal that can be authenticated and authorized
@@ -1888,6 +1920,8 @@ type ServiceAccountList struct {
 	// More info: http://releases.k8s.io/HEAD/docs/design/service_accounts.md#service-accounts
 	Items []ServiceAccount `json:"items"`
 }
+
+// +genclient=true
 
 // Endpoints is a collection of endpoints that implement the actual service. Example:
 //   Name: "mysvc",
@@ -2133,6 +2167,8 @@ const (
 // ResourceList is a set of (resource name, quantity) pairs.
 type ResourceList map[ResourceName]resource.Quantity
 
+// +genclient=true,nonNamespaced=true
+
 // Node is a worker node in Kubernetes, formerly known as minion.
 // Each node will have a unique identifier in the cache (i.e. in etcd).
 type Node struct {
@@ -2193,6 +2229,8 @@ const (
 	// NamespaceTerminating means the namespace is undergoing graceful termination
 	NamespaceTerminating NamespacePhase = "Terminating"
 )
+
+// +genclient=true,nonNamespaced=true
 
 // Namespace provides a scope for Names.
 // Use of multiple namespaces is optional.
@@ -2440,6 +2478,8 @@ const (
 	EventTypeWarning string = "Warning"
 )
 
+// +genclient=true
+
 // Event is a report of an event somewhere in the cluster.
 // TODO: Decide whether to store these separately or with the object they apply to.
 type Event struct {
@@ -2530,6 +2570,8 @@ type LimitRangeSpec struct {
 	Limits []LimitRangeItem `json:"limits"`
 }
 
+// +genclient=true
+
 // LimitRange sets resource usage limits for each kind of resource in a Namespace.
 type LimitRange struct {
 	unversioned.TypeMeta `json:",inline"`
@@ -2586,6 +2628,8 @@ type ResourceQuotaStatus struct {
 	Used ResourceList `json:"used,omitempty"`
 }
 
+// +genclient=true
+
 // ResourceQuota sets aggregate quota restrictions enforced per namespace
 type ResourceQuota struct {
 	unversioned.TypeMeta `json:",inline"`
@@ -2613,6 +2657,8 @@ type ResourceQuotaList struct {
 	// More info: http://releases.k8s.io/HEAD/docs/design/admission_control_resource_quota.md#admissioncontrol-plugin-resourcequota
 	Items []ResourceQuota `json:"items"`
 }
+
+// +genclient=true
 
 // Secret holds secret data of a certain type. The total bytes of the values in
 // the Data field must be less than MaxSecretSize bytes.
@@ -2697,6 +2743,8 @@ type SecretList struct {
 	Items []Secret `json:"items"`
 }
 
+// +genclient=true
+
 // ConfigMap holds configuration data for pods to consume.
 type ConfigMap struct {
 	unversioned.TypeMeta `json:",inline"`
@@ -2743,6 +2791,8 @@ type ComponentCondition struct {
 	// For example, a health check error code.
 	Error string `json:"error,omitempty"`
 }
+
+// +genclient=true,nonNamespaced=true
 
 // ComponentStatus (and ComponentStatusList) holds the cluster validation info.
 type ComponentStatus struct {

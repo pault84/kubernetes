@@ -913,6 +913,20 @@ func Convert_api_Probe_To_v1_Probe(in *api.Probe, out *v1.Probe, s conversion.Sc
 	return autoConvert_api_Probe_To_v1_Probe(in, out, s)
 }
 
+func autoConvert_api_PwxVolumeSource_To_v1_PwxVolumeSource(in *api.PwxVolumeSource, out *v1.PwxVolumeSource, s conversion.Scope) error {
+	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
+		defaulting.(func(*api.PwxVolumeSource))(in)
+	}
+	out.VolumeID = in.VolumeID
+	out.FSType = in.FSType
+	out.ReadOnly = in.ReadOnly
+	return nil
+}
+
+func Convert_api_PwxVolumeSource_To_v1_PwxVolumeSource(in *api.PwxVolumeSource, out *v1.PwxVolumeSource, s conversion.Scope) error {
+	return autoConvert_api_PwxVolumeSource_To_v1_PwxVolumeSource(in, out, s)
+}
+
 func autoConvert_api_RBDVolumeSource_To_v1_RBDVolumeSource(in *api.RBDVolumeSource, out *v1.RBDVolumeSource, s conversion.Scope) error {
 	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
 		defaulting.(func(*api.RBDVolumeSource))(in)
@@ -1252,6 +1266,15 @@ func autoConvert_api_VolumeSource_To_v1_VolumeSource(in *api.VolumeSource, out *
 		}
 	} else {
 		out.Flocker = nil
+	}
+	// unable to generate simple pointer conversion for api.PwxVolumeSource -> v1.PwxVolumeSource
+	if in.PwxDisk != nil {
+		out.PwxDisk = new(v1.PwxVolumeSource)
+		if err := Convert_api_PwxVolumeSource_To_v1_PwxVolumeSource(in.PwxDisk, out.PwxDisk, s); err != nil {
+			return err
+		}
+	} else {
+		out.PwxDisk = nil
 	}
 	// unable to generate simple pointer conversion for api.DownwardAPIVolumeSource -> v1.DownwardAPIVolumeSource
 	if in.DownwardAPI != nil {
@@ -2197,6 +2220,20 @@ func Convert_v1_Probe_To_api_Probe(in *v1.Probe, out *api.Probe, s conversion.Sc
 	return autoConvert_v1_Probe_To_api_Probe(in, out, s)
 }
 
+func autoConvert_v1_PwxVolumeSource_To_api_PwxVolumeSource(in *v1.PwxVolumeSource, out *api.PwxVolumeSource, s conversion.Scope) error {
+	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
+		defaulting.(func(*v1.PwxVolumeSource))(in)
+	}
+	out.VolumeID = in.VolumeID
+	out.FSType = in.FSType
+	out.ReadOnly = in.ReadOnly
+	return nil
+}
+
+func Convert_v1_PwxVolumeSource_To_api_PwxVolumeSource(in *v1.PwxVolumeSource, out *api.PwxVolumeSource, s conversion.Scope) error {
+	return autoConvert_v1_PwxVolumeSource_To_api_PwxVolumeSource(in, out, s)
+}
+
 func autoConvert_v1_RBDVolumeSource_To_api_RBDVolumeSource(in *v1.RBDVolumeSource, out *api.RBDVolumeSource, s conversion.Scope) error {
 	if defaulting, found := s.DefaultingInterface(reflect.TypeOf(*in)); found {
 		defaulting.(func(*v1.RBDVolumeSource))(in)
@@ -2536,6 +2573,15 @@ func autoConvert_v1_VolumeSource_To_api_VolumeSource(in *v1.VolumeSource, out *a
 		}
 	} else {
 		out.Flocker = nil
+	}
+	// unable to generate simple pointer conversion for v1.PwxVolumeSource -> api.PwxVolumeSource
+	if in.PwxDisk != nil {
+		out.PwxDisk = new(api.PwxVolumeSource)
+		if err := Convert_v1_PwxVolumeSource_To_api_PwxVolumeSource(in.PwxDisk, out.PwxDisk, s); err != nil {
+			return err
+		}
+	} else {
+		out.PwxDisk = nil
 	}
 	// unable to generate simple pointer conversion for v1.DownwardAPIVolumeSource -> api.DownwardAPIVolumeSource
 	if in.DownwardAPI != nil {
@@ -5295,6 +5341,7 @@ func init() {
 		autoConvert_api_PodSpec_To_v1_PodSpec,
 		autoConvert_api_PodTemplateSpec_To_v1_PodTemplateSpec,
 		autoConvert_api_Probe_To_v1_Probe,
+		autoConvert_api_PwxVolumeSource_To_v1_PwxVolumeSource,
 		autoConvert_api_RBDVolumeSource_To_v1_RBDVolumeSource,
 		autoConvert_api_ResourceRequirements_To_v1_ResourceRequirements,
 		autoConvert_api_SELinuxOptions_To_v1_SELinuxOptions,
@@ -5402,6 +5449,7 @@ func init() {
 		autoConvert_v1_PodSpec_To_api_PodSpec,
 		autoConvert_v1_PodTemplateSpec_To_api_PodTemplateSpec,
 		autoConvert_v1_Probe_To_api_Probe,
+		autoConvert_v1_PwxVolumeSource_To_api_PwxVolumeSource,
 		autoConvert_v1_RBDVolumeSource_To_api_RBDVolumeSource,
 		autoConvert_v1_ResourceRequirements_To_api_ResourceRequirements,
 		autoConvert_v1_SELinuxOptions_To_api_SELinuxOptions,

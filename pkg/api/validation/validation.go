@@ -498,6 +498,10 @@ func validateVolumeSource(source *api.VolumeSource, fldPath *field.Path) field.E
 		numVolumes++
 		allErrs = append(allErrs, validateAzureFile(source.AzureFile, fldPath.Child("azureFile"))...)
 	}
+	if source.PwxDisk != nil {
+                numVolumes++
+                allErrs = append(allErrs, validatePwx(source.PwxDisk, fldPath.Child("pwx"))...)
+        }
 	if numVolumes == 0 {
 		allErrs = append(allErrs, field.Required(fldPath, "must specify a volume type"))
 	}
@@ -532,9 +536,6 @@ func validateISCSIVolumeSource(iscsi *api.ISCSIVolumeSource, fldPath *field.Path
 	if len(iscsi.IQN) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("iqn"), ""))
 	}
-	if len(iscsi.FSType) == 0 {
-		allErrs = append(allErrs, field.Required(fldPath.Child("fsType"), ""))
-	}
 	if iscsi.Lun < 0 || iscsi.Lun > 255 {
 		allErrs = append(allErrs, field.Invalid(fldPath.Child("lun"), iscsi.Lun, InclusiveRangeErrorMsg(0, 255)))
 	}
@@ -545,10 +546,6 @@ func validateFCVolumeSource(fc *api.FCVolumeSource, fldPath *field.Path) field.E
 	allErrs := field.ErrorList{}
 	if len(fc.TargetWWNs) < 1 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("targetWWNs"), ""))
-	}
-
-	if len(fc.FSType) == 0 {
-		allErrs = append(allErrs, field.Required(fldPath.Child("fsType"), ""))
 	}
 
 	if fc.Lun == nil {
@@ -566,9 +563,6 @@ func validateGCEPersistentDiskVolumeSource(pd *api.GCEPersistentDiskVolumeSource
 	if len(pd.PDName) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("pdName"), ""))
 	}
-	if len(pd.FSType) == 0 {
-		allErrs = append(allErrs, field.Required(fldPath.Child("fsType"), ""))
-	}
 	if pd.Partition < 0 || pd.Partition > 255 {
 		allErrs = append(allErrs, field.Invalid(fldPath.Child("partition"), pd.Partition, pdPartitionErrorMsg))
 	}
@@ -579,9 +573,6 @@ func validateAWSElasticBlockStoreVolumeSource(PD *api.AWSElasticBlockStoreVolume
 	allErrs := field.ErrorList{}
 	if len(PD.VolumeID) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("volumeID"), ""))
-	}
-	if len(PD.FSType) == 0 {
-		allErrs = append(allErrs, field.Required(fldPath.Child("fsType"), ""))
 	}
 	if PD.Partition < 0 || PD.Partition > 255 {
 		allErrs = append(allErrs, field.Invalid(fldPath.Child("partition"), PD.Partition, pdPartitionErrorMsg))
@@ -686,9 +677,6 @@ func validateRBDVolumeSource(rbd *api.RBDVolumeSource, fldPath *field.Path) fiel
 	if len(rbd.RBDImage) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("image"), ""))
 	}
-	if len(rbd.FSType) == 0 {
-		allErrs = append(allErrs, field.Required(fldPath.Child("fsType"), ""))
-	}
 	return allErrs
 }
 
@@ -696,9 +684,6 @@ func validateCinderVolumeSource(cd *api.CinderVolumeSource, fldPath *field.Path)
 	allErrs := field.ErrorList{}
 	if len(cd.VolumeID) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("volumeID"), ""))
-	}
-	if len(cd.FSType) == 0 {
-		allErrs = append(allErrs, field.Required(fldPath.Child("fsType"), ""))
 	}
 	return allErrs
 }
@@ -716,9 +701,6 @@ func validateFlexVolumeSource(fv *api.FlexVolumeSource, fldPath *field.Path) fie
 	if len(fv.Driver) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("driver"), ""))
 	}
-	if len(fv.FSType) == 0 {
-		allErrs = append(allErrs, field.Required(fldPath.Child("fsType"), ""))
-	}
 	return allErrs
 }
 
@@ -731,6 +713,17 @@ func validateAzureFile(azure *api.AzureFileVolumeSource, fldPath *field.Path) fi
 		allErrs = append(allErrs, field.Required(fldPath.Child("shareName"), ""))
 	}
 	return allErrs
+}
+
+func validatePwx(pd *api.PwxVolumeSource, fldPath *field.Path) field.ErrorList {
+        allErrs := field.ErrorList{}
+        if len(pd.VolumeID) == 0 {
+                allErrs = append(allErrs, field.Required(fldPath.Child("VolumeId"), ""))
+        }
+        if len(pd.FSType) == 0 {
+                allErrs = append(allErrs, field.Required(fldPath.Child("fsType"), ""))
+        }
+        return allErrs
 }
 
 func ValidatePersistentVolumeName(name string, prefix bool) (bool, string) {
@@ -861,6 +854,10 @@ func ValidatePersistentVolume(pv *api.PersistentVolume) field.ErrorList {
 		numVolumes++
 		allErrs = append(allErrs, validateAzureFile(pv.Spec.AzureFile, specPath.Child("azureFile"))...)
 	}
+	if pv.Spec.PwxDisk != nil {
+                numVolumes++
+                allErrs = append(allErrs, validatePwx(pv.Spec.PwxDisk, specPath.Child("pwx"))...)
+        }
 	if numVolumes == 0 {
 		allErrs = append(allErrs, field.Required(specPath, "must specify a volume type"))
 	}

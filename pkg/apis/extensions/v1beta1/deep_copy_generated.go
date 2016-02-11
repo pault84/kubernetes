@@ -699,6 +699,13 @@ func deepCopy_v1_Probe(in v1.Probe, out *v1.Probe, c *conversion.Cloner) error {
 	return nil
 }
 
+func deepCopy_v1_PwxVolumeSource(in v1.PwxVolumeSource, out *v1.PwxVolumeSource, c *conversion.Cloner) error {
+	out.VolumeID = in.VolumeID
+	out.FSType = in.FSType
+	out.ReadOnly = in.ReadOnly
+	return nil
+}
+
 func deepCopy_v1_RBDVolumeSource(in v1.RBDVolumeSource, out *v1.RBDVolumeSource, c *conversion.Cloner) error {
 	if in.CephMonitors != nil {
 		out.CephMonitors = make([]string, len(in.CephMonitors))
@@ -954,6 +961,14 @@ func deepCopy_v1_VolumeSource(in v1.VolumeSource, out *v1.VolumeSource, c *conve
 		}
 	} else {
 		out.Flocker = nil
+	}
+	if in.PwxDisk != nil {
+		out.PwxDisk = new(v1.PwxVolumeSource)
+		if err := deepCopy_v1_PwxVolumeSource(*in.PwxDisk, out.PwxDisk, c); err != nil {
+			return err
+		}
+	} else {
+		out.PwxDisk = nil
 	}
 	if in.DownwardAPI != nil {
 		out.DownwardAPI = new(v1.DownwardAPIVolumeSource)
@@ -2032,6 +2047,7 @@ func init() {
 		deepCopy_v1_PodSpec,
 		deepCopy_v1_PodTemplateSpec,
 		deepCopy_v1_Probe,
+		deepCopy_v1_PwxVolumeSource,
 		deepCopy_v1_RBDVolumeSource,
 		deepCopy_v1_ResourceRequirements,
 		deepCopy_v1_SELinuxOptions,
