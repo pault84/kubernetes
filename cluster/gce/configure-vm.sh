@@ -316,6 +316,7 @@ dns_server: '$(echo "$DNS_SERVER_IP" | sed -e "s/'/''/g")'
 dns_domain: '$(echo "$DNS_DOMAIN" | sed -e "s/'/''/g")'
 admission_control: '$(echo "$ADMISSION_CONTROL" | sed -e "s/'/''/g")'
 network_provider: '$(echo "$NETWORK_PROVIDER" | sed -e "s/'/''/g")'
+hairpin_mode: '$(echo "$HAIRPIN_MODE" | sed -e "s/'/''/g")'
 opencontrail_tag: '$(echo "$OPENCONTRAIL_TAG" | sed -e "s/'/''/g")'
 opencontrail_kubernetes_tag: '$(echo "$OPENCONTRAIL_KUBERNETES_TAG")'
 opencontrail_public_subnet: '$(echo "$OPENCONTRAIL_PUBLIC_SUBNET")'
@@ -392,6 +393,11 @@ EOF
     if [ -n "${TERMINATED_POD_GC_THRESHOLD:-}" ]; then
       cat <<EOF >>/srv/salt-overlay/pillar/cluster-params.sls
 terminated_pod_gc_threshold: '$(echo "${TERMINATED_POD_GC_THRESHOLD}" | sed -e "s/'/''/g")'
+EOF
+    fi
+    if [ -n "${ENABLE_CUSTOM_METRICS:-}" ]; then
+      cat <<EOF >>/srv/salt-overlay/pillar/cluster-params.sls       
+enable_custom_metrics: '$(echo "${ENABLE_CUSTOM_METRICS}" | sed -e "s/'/''/g")'
 EOF
     fi
 }

@@ -196,8 +196,8 @@ func (s *CMServer) Run(_ []string) error {
 		glog.Fatalf("Failed to get supported resources from server: %v", err)
 	}
 
-	namespaceController := namespacecontroller.NewNamespaceController(clientset.NewForConfigOrDie(client.AddUserAgent(kubeconfig, "namespace-controller")), &unversioned.APIVersions{}, s.NamespaceSyncPeriod)
-	namespaceController.Run()
+	namespaceController := namespacecontroller.NewNamespaceController(clientset.NewForConfigOrDie(client.AddUserAgent(kubeconfig, "namespace-controller")), versions, s.NamespaceSyncPeriod)
+	go namespaceController.Run(s.ConcurrentNamespaceSyncs, wait.NeverStop)
 
 	groupVersion := "extensions/v1beta1"
 	resources, found := resourceMap[groupVersion]

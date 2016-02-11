@@ -499,6 +499,7 @@ CA_CERT: $(yaml-quote ${CA_CERT_BASE64:-})
 KUBELET_CERT: $(yaml-quote ${KUBELET_CERT_BASE64:-})
 KUBELET_KEY: $(yaml-quote ${KUBELET_KEY_BASE64:-})
 NETWORK_PROVIDER: $(yaml-quote ${NETWORK_PROVIDER:-})
+HAIRPIN_MODE: $(yaml-quote ${HAIRPIN_MODE:-})
 OPENCONTRAIL_TAG: $(yaml-quote ${OPENCONTRAIL_TAG:-})
 OPENCONTRAIL_KUBERNETES_TAG: $(yaml-quote ${OPENCONTRAIL_KUBERNETES_TAG:-})
 OPENCONTRAIL_PUBLIC_SUBNET: $(yaml-quote ${OPENCONTRAIL_PUBLIC_SUBNET:-})
@@ -542,6 +543,11 @@ EOF
   if [ -n "${KUBELET_TEST_LOG_LEVEL:-}" ]; then
       cat >>$file <<EOF
 KUBELET_TEST_LOG_LEVEL: $(yaml-quote ${KUBELET_TEST_LOG_LEVEL})
+EOF
+  fi
+  if [ -n "${ENABLE_CUSTOM_METRICS:-}" ]; then
+    cat >>$file <<EOF
+ENABLE_CUSTOM_METRICS: $(yaml-quote ${ENABLE_CUSTOM_METRICS})
 EOF
   fi
   if [[ "${master}" == "true" ]]; then

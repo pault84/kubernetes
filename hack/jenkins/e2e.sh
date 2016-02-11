@@ -289,8 +289,8 @@ case ${JOB_NAME} in
     : ${PROJECT:="kubernetes-flannel"}
     ;;
 
-   # Runs only the ingress tests on GKE.
-   kubernetes-e2e-gke-ingress)
+  # Runs only the ingress tests on GKE.
+  kubernetes-e2e-gke-ingress)
     : ${E2E_CLUSTER_NAME:="jenkins-gke-e2e-ingress"}
     : ${E2E_NETWORK:="e2e-gke-ingress"}
     : ${E2E_SET_CLUSTER_API_VERSION:=y}
@@ -440,6 +440,8 @@ case ${JOB_NAME} in
     : ${PROJECT:="k8s-jnks-e2e-gce-autoscaling"}
     : ${FAIL_ON_GCP_RESOURCE_LEAK:="true"}
     : ${ENABLE_DEPLOYMENTS:=true}
+    # Override GCE default for cluster size autoscaling purposes.
+    ENABLE_CLUSTER_MONITORING="googleinfluxdb"
     ADMISSION_CONTROL="NamespaceLifecycle,InitialResources,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota"
     ;;
 
@@ -583,7 +585,7 @@ case ${JOB_NAME} in
     : ${E2E_DOWN:="true"}
     : ${E2E_TEST:="false"}
     : ${USE_KUBEMARK:="true"}
-    : ${KUBEMARK_TESTS:="should\sallow\sstarting\s30\spods\sper\snode"}
+    : ${KUBEMARK_TESTS:="\[Feature:Performance\]"}
     # Override defaults to be indpendent from GCE defaults and set kubemark parameters
     # We need 11 so that we won't hit max-pods limit (set to 100). TODO: do it in a nicer way.
     NUM_NODES="11"
@@ -607,6 +609,7 @@ case ${JOB_NAME} in
     : ${E2E_TEST:="false"}
     : ${E2E_UP:="true"}
     : ${KUBE_GCE_INSTANCE_PREFIX:="gce-soak-weekly"}
+    : ${HAIRPIN_MODE:="false"}
     : ${PROJECT:="kubernetes-jenkins"}
     ;;
 
@@ -625,6 +628,36 @@ case ${JOB_NAME} in
     # TODO(ihmccreery) remove [Skipped] once tests are relabeled
     : ${GINKGO_TEST_ARGS:="--ginkgo.skip=\[Disruptive\]|\[Flaky\]|\[Feature:.+\]|\[Skipped\]"}
     : ${KUBE_GCE_INSTANCE_PREFIX:="gce-soak-weekly"}
+    : ${HAIRPIN_MODE:="false"}
+    : ${PROJECT:="kubernetes-jenkins"}
+    ;;
+
+  # Clone of kubernetes-soak-weekly-deploy-gce. Issue #20832.
+  kubernetes-soak-weekly-deploy-gce-2)
+    : ${E2E_CLUSTER_NAME:="gce-soak-weekly-2"}
+    : ${E2E_DOWN:="false"}
+    : ${E2E_NETWORK:="gce-soak-weekly-2"}
+    : ${E2E_TEST:="false"}
+    : ${E2E_UP:="true"}
+    : ${KUBE_GCE_INSTANCE_PREFIX:="gce-soak-weekly-2"}
+    : ${PROJECT:="kubernetes-jenkins"}
+    ;;
+
+  # Clone of kubernetes-soak-continuous-e2e-gce. Issue #20832.
+  kubernetes-soak-continuous-e2e-gce-2)
+    : ${E2E_CLUSTER_NAME:="gce-soak-weekly-2"}
+    : ${E2E_DOWN:="false"}
+    : ${E2E_NETWORK:="gce-soak-weekly-2"}
+    : ${E2E_UP:="false"}
+    # Clear out any orphaned namespaces in case previous run was interrupted.
+    : ${E2E_CLEAN_START:="true"}
+    # We should be testing the reliability of a long-running cluster. The
+    # [Disruptive] tests kill/restart components or nodes in the cluster,
+    # defeating the purpose of a soak cluster. (#15722)
+    #
+    # TODO(ihmccreery) remove [Skipped] once tests are relabeled
+    : ${GINKGO_TEST_ARGS:="--ginkgo.skip=\[Disruptive\]|\[Flaky\]|\[Feature:.+\]|\[Skipped\]"}
+    : ${KUBE_GCE_INSTANCE_PREFIX:="gce-soak-weekly-2"}
     : ${PROJECT:="kubernetes-jenkins"}
     ;;
 
@@ -857,6 +890,7 @@ export GCE_SERVICE_ACCOUNT=$(gcloud auth list 2> /dev/null | grep active | cut -
 export FAIL_ON_GCP_RESOURCE_LEAK="${FAIL_ON_GCP_RESOURCE_LEAK:-false}"
 export ALLOWED_NOTREADY_NODES=${ALLOWED_NOTREADY_NODES:-}
 export EXIT_ON_WEAK_ERROR=${EXIT_ON_WEAK_ERROR:-}
+export HAIRPIN_MODE=${HAIRPIN_MODE:-}
 
 # GKE variables
 export CLUSTER_NAME=${E2E_CLUSTER_NAME}

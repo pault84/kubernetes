@@ -170,8 +170,8 @@ var _ = Describe("Kubectl client", func() {
 		var podPath string
 
 		BeforeEach(func() {
-			podPath = filepath.Join(testContext.RepoRoot, "docs/user-guide/pod.yaml")
-			By("creating the pod")
+			podPath = filepath.Join(testContext.RepoRoot, "test", "e2e", "testing-manifests", "kubectl", "pod-with-readiness-probe.yaml")
+			By(fmt.Sprintf("creating the pod from %v", podPath))
 			runKubectlOrDie("create", "-f", podPath, fmt.Sprintf("--namespace=%v", ns))
 			checkPodsRunningReady(c, ns, []string{simplePodName}, podStartTimeout)
 		})
@@ -457,7 +457,7 @@ var _ = Describe("Kubectl client", func() {
 				withStdinData("abcd1234\n").
 				execOrDie()
 			Expect(runOutput).ToNot(ContainSubstring("stdin closed"))
-			runTestPod, err := util.GetFirstPod(c, ns, map[string]string{"run": "run-test-3"})
+			runTestPod, err := util.GetFirstPod(c, ns, labels.SelectorFromSet(map[string]string{"run": "run-test-3"}))
 			if err != nil {
 				os.Exit(1)
 			}

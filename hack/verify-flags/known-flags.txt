@@ -49,6 +49,7 @@ concurrent-deployment-syncs
 concurrent-endpoint-syncs
 concurrent-replicaset-syncs
 concurrent-resource-quota-syncs
+concurrent-namespace-syncs
 config-sync-period
 configure-cbr0
 conntrack-max
@@ -170,6 +171,7 @@ kubectl-path
 kubelet-address
 kubelet-cadvisor-port
 kubelet-certificate-authority
+kubelet-cgroups
 kubelet-client-certificate
 kubelet-client-key
 kubelet-docker-endpoint
@@ -310,6 +312,7 @@ root-ca-file
 root-dir
 run-proxy
 runtime-config
+runtime-cgroups
 save-config
 scheduler-config
 scheduler-name
@@ -346,6 +349,7 @@ storage-versions
 streaming-connection-idle-timeout
 suicide-timeout
 sync-frequency
+system-cgroups
 system-container
 system-reserved
 target-port
@@ -376,8 +380,11 @@ www-prefix
 clientset-name
 clientset-only
 clientset-path
+fake-clientset
 leader-elect
 leader-elect-lease-duration
 leader-elect-renew-deadline
 leader-elect-retry-period
 watch-cache-sizes
+configure-hairpin-mode
+lock-file

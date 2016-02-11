@@ -52,9 +52,9 @@ type KubeProxyConfiguration struct {
 	// portRange is the range of host ports (beginPort-endPort, inclusive) that may be consumed
 	// in order to proxy service traffic. If unspecified (0-0) then ports will be randomly chosen.
 	PortRange string `json:"portRange"`
-	// resourceContainer is the bsolute name of the resource-only container to create and run
+	// resourceContainer is the absolute name of the resource-only container to create and run
 	// the Kube-proxy in (Default: /kube-proxy).
-	ResourceContainer string `json:"resourceContainer"`
+	ResourceContainer string `json:"kubeletCgroups"`
 	// udpIdleTimeout is how long an idle UDP connection will be kept open (e.g. '250ms', '2s').
 	// Must be greater than 0. Only applicable for proxyMode=userspace.
 	UDPIdleTimeout unversioned.Duration `json:"udpTimeoutMilliseconds"`
@@ -223,9 +223,14 @@ type KubeletConfiguration struct {
 	CloudProvider string `json:"cloudProvider,omitempty"`
 	// cloudConfigFile is the path to the cloud provider configuration file.
 	CloudConfigFile string `json:"cloudConfigFile,omitempty"`
-	// resourceContainer is the absolute name of the resource-only container
-	// to create and run the Kubelet in.
-	ResourceContainer string `json:"resourceContainer,omitempty"`
+	// KubeletCgroups is the absolute name of cgroups to isolate the kubelet in.
+	KubeletCgroups string `json:"kubeletCgroups,omitempty"`
+	// Cgroups that container runtime is expected to be isolated in.
+	RuntimeCgroups string `json:"runtimeCgroups,omitempty"`
+	// SystemCgroups is absolute name of cgroups in which to place
+	// all non-kernel processes that are not already in a container. Empty
+	// for no container. Rolling back the flag requires a reboot.
+	SystemCgroups string `json:"systemContainer,omitempty"`
 	// cgroupRoot is the root cgroup to use for pods. This is handled by the
 	// container runtime on a best effort basis.
 	CgroupRoot string `json:"cgroupRoot,omitempty"`
@@ -234,16 +239,21 @@ type KubeletConfiguration struct {
 	// rktPath is hte path of rkt binary. Leave empty to use the first rkt in
 	// $PATH.
 	RktPath string `json:"rktPath,omitempty"`
+	// lockFilePath is the path that kubelet will use to as a lock file.
+	// It uses this file as a lock to synchronize with other kubelet processes
+	// that may be running.
+	LockFilePath string `json:"lockFilePath"`
 	// rktStage1Image is the image to use as stage1. Local paths and
 	// http/https URLs are supported.
 	RktStage1Image string `json:"rktStage1Image,omitempty"`
-	// systemContainer is the resource-only container in which to place
-	// all non-kernel processes that are not already in a container. Empty
-	// for no container. Rolling back the flag requires a reboot.
-	SystemContainer string `json:"systemContainer"`
 	// configureCBR0 enables the kublet to configure cbr0 based on
 	// Node.Spec.PodCIDR.
 	ConfigureCBR0 bool `json:"configureCbr0"`
+	// Should the kubelet set the hairpin flag on veth interfaces for containers
+	// it creates? Setting this flag allows endpoints in a Service to
+	// loadbalance back to themselves if they should try to access their own
+	// Service.
+	HairpinMode bool `json:"configureHairpinMode"`
 	// maxPods is the number of pods that can run on this Kubelet.
 	MaxPods int `json:"maxPods"`
 	// dockerExecHandlerName is the handler to use when executing a command

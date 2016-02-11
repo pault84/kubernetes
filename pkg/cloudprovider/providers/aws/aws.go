@@ -43,6 +43,7 @@ import (
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/cloudprovider"
 	"k8s.io/kubernetes/pkg/credentialprovider/aws"
+	"k8s.io/kubernetes/pkg/types"
 	"k8s.io/kubernetes/pkg/util/sets"
 
 	"github.com/golang/glog"
@@ -53,6 +54,9 @@ const ProviderName = "aws"
 
 // The tag name we use to differentiate multiple logically independent clusters running in the same AZ
 const TagNameKubernetesCluster = "KubernetesCluster"
+
+// The tag name we use to differentiate multiple services. Used currently for ELBs only.
+const TagNameKubernetesService = "kubernetes.io/service-name"
 
 // We sometimes read to see if something exists; then try to create it if we didn't find it
 // This can fail once in a consistent system if done in parallel
@@ -650,19 +654,26 @@ func (aws *AWSCloud) NodeAddresses(name string) ([]api.NodeAddress, error) {
 		return nil, err
 	}
 	if self.nodeName == name || len(name) == 0 {
+		addresses := []api.NodeAddress{}
+
 		internalIP, err := aws.metadata.GetMetadata("local-ipv4")
 		if err != nil {
 			return nil, err
 		}
+		addresses = append(addresses, api.NodeAddress{Type: api.NodeInternalIP, Address: internalIP})
+		// Legacy compatibility: the private ip was the legacy host ip
+		addresses = append(addresses, api.NodeAddress{Type: api.NodeLegacyHostIP, Address: internalIP})
+
 		externalIP, err := aws.metadata.GetMetadata("public-ipv4")
 		if err != nil {
-			return nil, err
+			//TODO: It would be nice to be able to determine the reason for the failure,
+			// but the AWS client masks all failures with the same error description.
+			glog.V(2).Info("Could not determine public IP from AWS metadata.")
+		} else {
+			addresses = append(addresses, api.NodeAddress{Type: api.NodeExternalIP, Address: externalIP})
 		}
-		return []api.NodeAddress{
-			{Type: api.NodeInternalIP, Address: internalIP},
-			{Type: api.NodeLegacyHostIP, Address: internalIP},
-			{Type: api.NodeExternalIP, Address: externalIP},
-		}, nil
+
+		return addresses, nil
 	}
 	instance, err := aws.getInstanceByNodeName(name)
 	if err != nil {
@@ -1227,7 +1238,7 @@ func (c *AWSCloud) AttachDisk(diskName string, instanceName string, readOnly boo
 			return "", fmt.Errorf("Error attaching EBS volume: %v", err)
 		}
 
-		glog.V(2).Info("AttachVolume request returned %v", attachResponse)
+		glog.V(2).Infof("AttachVolume request returned %v", attachResponse)
 	}
 
 	err = disk.waitForAttachmentStatus("attached")
@@ -1768,8 +1779,8 @@ func (s *AWSCloud) listSubnetIDsinVPC(vpcId string) ([]string, error) {
 
 // EnsureLoadBalancer implements LoadBalancer.EnsureLoadBalancer
 // TODO(justinsb) It is weird that these take a region.  I suspect it won't work cross-region anyway.
-func (s *AWSCloud) EnsureLoadBalancer(name, region string, publicIP net.IP, ports []*api.ServicePort, hosts []string, affinity api.ServiceAffinity) (*api.LoadBalancerStatus, error) {
-	glog.V(2).Infof("EnsureLoadBalancer(%v, %v, %v, %v, %v)", name, region, publicIP, ports, hosts)
+func (s *AWSCloud) EnsureLoadBalancer(name, region string, publicIP net.IP, ports []*api.ServicePort, hosts []string, serviceName types.NamespacedName, affinity api.ServiceAffinity) (*api.LoadBalancerStatus, error) {
+	glog.V(2).Infof("EnsureLoadBalancer(%v, %v, %v, %v, %v, %v)", name, region, publicIP, ports, hosts, serviceName)
 
 	if region != s.region {
 		return nil, fmt.Errorf("requested load balancer region '%s' does not match cluster region '%s'", region, s.region)
@@ -1816,7 +1827,7 @@ func (s *AWSCloud) EnsureLoadBalancer(name, region string, publicIP net.IP, port
 	var securityGroupID string
 	{
 		sgName := "k8s-elb-" + name
-		sgDescription := "Security group for Kubernetes ELB " + name
+		sgDescription := fmt.Sprintf("Security group for Kubernetes ELB %s (%v)", name, serviceName)
 		securityGroupID, err = s.ensureSecurityGroup(sgName, sgDescription, vpcId)
 		if err != nil {
 			glog.Error("Error creating load balancer security group: ", err)
@@ -1865,7 +1876,7 @@ func (s *AWSCloud) EnsureLoadBalancer(name, region string, publicIP net.IP, port
 	}
 
 	// Build the load balancer itself
-	loadBalancer, err := s.ensureLoadBalancer(name, listeners, subnetIDs, securityGroupIDs)
+	loadBalancer, err := s.ensureLoadBalancer(serviceName, name, listeners, subnetIDs, securityGroupIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -1883,11 +1894,11 @@ func (s *AWSCloud) EnsureLoadBalancer(name, region string, publicIP net.IP, port
 
 	err = s.ensureLoadBalancerInstances(orEmpty(loadBalancer.LoadBalancerName), loadBalancer.Instances, instances)
 	if err != nil {
-		glog.Warning("Error registering instances with the load balancer: %v", err)
+		glog.Warningf("Error registering instances with the load balancer: %v", err)
 		return nil, err
 	}
 
-	glog.V(1).Infof("Loadbalancer %s has DNS name %s", name, orEmpty(loadBalancer.DNSName))
+	glog.V(1).Infof("Loadbalancer %s (%v) has DNS name %s", name, serviceName, orEmpty(loadBalancer.DNSName))
 
 	// TODO: Wait for creation?
 
@@ -2320,4 +2331,9 @@ func (s *AWSCloud) addFilters(filters []*ec2.Filter) []*ec2.Filter {
 		filters = append(filters, newEc2Filter("tag:"+k, v))
 	}
 	return filters
+}
+
+// Returns the cluster name or an empty string
+func (s *AWSCloud) getClusterName() string {
+	return s.filterTags[TagNameKubernetesCluster]
 }
